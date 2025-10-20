@@ -1,5 +1,5 @@
 # Stage 1: Build frontend assets with Node.js
-FROM node:24-alpine AS frontend-build
+FROM node:25-alpine AS frontend-build
 
 WORKDIR /src/ClientApp
 
