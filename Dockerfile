@@ -31,7 +31,7 @@ COPY --from=frontend-build /src/wwwroot/build ./wwwroot/build
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false /p:CI=true /p:DOCKER_BUILD=true
 
 # Use the official .NET 8 runtime image for the final stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 WORKDIR /app
 
