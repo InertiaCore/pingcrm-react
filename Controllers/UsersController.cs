@@ -114,7 +114,6 @@ namespace PingCRM.Controllers
 
         [HttpPost]
         [Route("users")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Store([FromBody] UserViewModel model)
         {
             if (!ModelState.IsValid)
@@ -165,9 +164,12 @@ namespace PingCRM.Controllers
         [Route("users/{id}/edit")]
         public async Task<IActionResult> Edit(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
+            if (user == null || user.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -189,12 +191,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("users/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, [FromBody] UserViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
+            if (user == null || user.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -236,12 +240,14 @@ namespace PingCRM.Controllers
 
         [HttpDelete]
         [Route("users/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Destroy(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
+            if (user == null || user.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -261,12 +267,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("users/{id}/restore")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
+            if (user == null || user.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }

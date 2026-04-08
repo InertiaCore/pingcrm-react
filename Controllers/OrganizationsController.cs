@@ -92,7 +92,6 @@ namespace PingCRM.Controllers
 
         [HttpPost]
         [Route("organizations")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Store([FromBody] OrganizationViewModel model)
         {
             if (!ModelState.IsValid)
@@ -132,9 +131,12 @@ namespace PingCRM.Controllers
         [Route("organizations/{id}/edit")]
         public async Task<IActionResult> Edit(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var organization = await _context.Organizations
                 .Include(o => o.Contacts)
-                .FirstOrDefaultAsync(o => o.Id == id);
+                .FirstOrDefaultAsync(o => o.Id == id && o.AccountId == currentUser.AccountId);
 
             if (organization == null)
             {
@@ -172,12 +174,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("organizations/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, [FromBody] OrganizationViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var organization = await _context.Organizations.FindAsync(id);
 
-            if (organization == null)
+            if (organization == null || organization.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -205,12 +209,14 @@ namespace PingCRM.Controllers
 
         [HttpDelete]
         [Route("organizations/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Destroy(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var organization = await _context.Organizations.FindAsync(id);
 
-            if (organization == null)
+            if (organization == null || organization.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -224,12 +230,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("organizations/{id}/restore")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var organization = await _context.Organizations.FindAsync(id);
 
-            if (organization == null)
+            if (organization == null || organization.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }

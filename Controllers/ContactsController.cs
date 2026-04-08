@@ -113,7 +113,6 @@ namespace PingCRM.Controllers
 
         [HttpPost]
         [Route("contacts")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Store([FromBody] ContactViewModel model)
         {
             if (!ModelState.IsValid)
@@ -155,17 +154,14 @@ namespace PingCRM.Controllers
         [Route("contacts/{id}/edit")]
         public async Task<IActionResult> Edit(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var contact = await _context.Contacts.FindAsync(id);
 
-            if (contact == null)
+            if (contact == null || contact.AccountId != currentUser.AccountId)
             {
                 return NotFound();
-            }
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser?.AccountId == null)
-            {
-                return Unauthorized();
             }
 
             var organizations = await _context.Organizations
@@ -197,12 +193,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("contacts/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, [FromBody] ContactViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var contact = await _context.Contacts.FindAsync(id);
 
-            if (contact == null)
+            if (contact == null || contact.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -232,12 +230,14 @@ namespace PingCRM.Controllers
 
         [HttpDelete]
         [Route("contacts/{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Destroy(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var contact = await _context.Contacts.FindAsync(id);
 
-            if (contact == null)
+            if (contact == null || contact.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
@@ -251,12 +251,14 @@ namespace PingCRM.Controllers
 
         [HttpPut]
         [Route("contacts/{id}/restore")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.AccountId == null) return Unauthorized();
+
             var contact = await _context.Contacts.FindAsync(id);
 
-            if (contact == null)
+            if (contact == null || contact.AccountId != currentUser.AccountId)
             {
                 return NotFound();
             }
