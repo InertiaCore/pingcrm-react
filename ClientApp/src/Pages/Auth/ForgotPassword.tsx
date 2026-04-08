@@ -1,37 +1,34 @@
 import LoadingButton from '@/Components/Button/LoadingButton';
-import { CheckboxInput } from '@/Components/Form/CheckboxInput';
 import FieldGroup from '@/Components/Form/FieldGroup';
 import TextInput from '@/Components/Form/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
     const { data, setData, errors, post, processing } = useForm({
-        email: 'johndoe@example.com',
-        password: 'secret',
-        remember: true,
+        email: '',
     });
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-
-        post('/login');
+        post('/forgot-password');
     }
 
     return (
         <GuestLayout>
-            <Head title="Login" />
+            <Head title="Forgot Password" />
 
             <div className="card shadow-xl">
                 <form onSubmit={handleSubmit}>
                     <div className="card-body space-y-6">
                         <div className="text-center">
                             <h1 className="text-2xl font-bold text-gray-900">
-                                Welcome Back!
+                                Forgot Password?
                             </h1>
                             <p className="mt-2 text-sm text-gray-600">
-                                Sign in to your account to continue
+                                Enter your email and we'll send you a reset
+                                link.
                             </p>
                         </div>
 
@@ -53,53 +50,19 @@ export default function LoginPage() {
                                     }
                                 />
                             </FieldGroup>
-
-                            <FieldGroup
-                                label="Password"
-                                name="password"
-                                error={errors.password}
-                            >
-                                <TextInput
-                                    name="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    placeholder="Enter your password"
-                                    error={errors.password}
-                                    value={data.password}
-                                    onChange={(e) =>
-                                        setData('password', e.target.value)
-                                    }
-                                />
-                            </FieldGroup>
-
-                            <FieldGroup>
-                                <CheckboxInput
-                                    label="Remember me"
-                                    name="remember"
-                                    id="remember"
-                                    checked={data.remember}
-                                    onChange={(e) =>
-                                        setData('remember', e.target.checked)
-                                    }
-                                />
-                            </FieldGroup>
                         </div>
                     </div>
 
                     <div className="card-footer flex items-center justify-between">
-                        <Link
-                            className="btn-link text-sm"
-                            tabIndex={-1}
-                            href="/forgot-password"
-                        >
-                            Forgot your password?
+                        <Link className="btn-link text-sm" href="/login">
+                            Back to login
                         </Link>
                         <LoadingButton
                             type="submit"
                             loading={processing}
                             className="btn-indigo"
                         >
-                            Sign In
+                            Send Reset Link
                         </LoadingButton>
                     </div>
                 </form>

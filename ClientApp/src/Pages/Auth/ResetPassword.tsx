@@ -1,37 +1,44 @@
 import LoadingButton from '@/Components/Button/LoadingButton';
-import { CheckboxInput } from '@/Components/Form/CheckboxInput';
 import FieldGroup from '@/Components/Form/FieldGroup';
 import TextInput from '@/Components/Form/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import React from 'react';
 
-export default function LoginPage() {
+interface ResetPasswordProps {
+    token: string;
+    email: string;
+}
+
+export default function ResetPasswordPage({
+    token,
+    email,
+}: ResetPasswordProps) {
     const { data, setData, errors, post, processing } = useForm({
-        email: 'johndoe@example.com',
-        password: 'secret',
-        remember: true,
+        token,
+        email,
+        password: '',
+        password_confirmation: '',
     });
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-
-        post('/login');
+        post('/reset-password');
     }
 
     return (
         <GuestLayout>
-            <Head title="Login" />
+            <Head title="Reset Password" />
 
             <div className="card shadow-xl">
                 <form onSubmit={handleSubmit}>
                     <div className="card-body space-y-6">
                         <div className="text-center">
                             <h1 className="text-2xl font-bold text-gray-900">
-                                Welcome Back!
+                                Reset Password
                             </h1>
                             <p className="mt-2 text-sm text-gray-600">
-                                Sign in to your account to continue
+                                Enter your new password below.
                             </p>
                         </div>
 
@@ -45,7 +52,6 @@ export default function LoginPage() {
                                     name="email"
                                     type="email"
                                     autoComplete="email"
-                                    placeholder="Enter your email"
                                     error={errors.email}
                                     value={data.email}
                                     onChange={(e) =>
@@ -55,15 +61,15 @@ export default function LoginPage() {
                             </FieldGroup>
 
                             <FieldGroup
-                                label="Password"
+                                label="New Password"
                                 name="password"
                                 error={errors.password}
                             >
                                 <TextInput
                                     name="password"
                                     type="password"
-                                    autoComplete="current-password"
-                                    placeholder="Enter your password"
+                                    autoComplete="new-password"
+                                    placeholder="Enter new password"
                                     error={errors.password}
                                     value={data.password}
                                     onChange={(e) =>
@@ -72,34 +78,36 @@ export default function LoginPage() {
                                 />
                             </FieldGroup>
 
-                            <FieldGroup>
-                                <CheckboxInput
-                                    label="Remember me"
-                                    name="remember"
-                                    id="remember"
-                                    checked={data.remember}
+                            <FieldGroup
+                                label="Confirm Password"
+                                name="password_confirmation"
+                                error={errors.password_confirmation}
+                            >
+                                <TextInput
+                                    name="password_confirmation"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    placeholder="Confirm new password"
+                                    error={errors.password_confirmation}
+                                    value={data.password_confirmation}
                                     onChange={(e) =>
-                                        setData('remember', e.target.checked)
+                                        setData(
+                                            'password_confirmation',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                             </FieldGroup>
                         </div>
                     </div>
 
-                    <div className="card-footer flex items-center justify-between">
-                        <Link
-                            className="btn-link text-sm"
-                            tabIndex={-1}
-                            href="/forgot-password"
-                        >
-                            Forgot your password?
-                        </Link>
+                    <div className="card-footer flex justify-end">
                         <LoadingButton
                             type="submit"
                             loading={processing}
                             className="btn-indigo"
                         >
-                            Sign In
+                            Reset Password
                         </LoadingButton>
                     </div>
                 </form>
