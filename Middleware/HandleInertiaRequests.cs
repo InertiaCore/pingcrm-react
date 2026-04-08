@@ -45,38 +45,46 @@ public class HandleInertiaRequests
             }
         });
 
-        Inertia.Share("auth", () =>
+        // Resolve user data async before the lambda to avoid sync-over-async (.Result)
+        object authData;
+        if (context.User.Identity?.IsAuthenticated == true)
         {
-            if (context.User.Identity?.IsAuthenticated == true)
+            var userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
+            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+            var user = await userManager.GetUserAsync(context.User);
+            if (user != null)
             {
-                var userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
-                var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-                var user = userManager.GetUserAsync(context.User).Result;
-                if (user != null)
+                var account = await dbContext.Accounts.FindAsync(user.AccountId);
+                authData = new
                 {
-                    // Load the account data separately
-                    var account = dbContext.Accounts.Find(user.AccountId);
-
-                    return (object)new
+                    user = new
                     {
-                        user = new
+                        id = user.Id,
+                        first_name = user.FirstName,
+                        last_name = user.LastName,
+                        email = user.Email,
+                        owner = user.Owner,
+                        photo = user.PhotoPath,
+                        deleted_at = user.DeletedAt,
+                        account = new
                         {
-                            id = user.Id,
-                            first_name = user.FirstName,
-                            last_name = user.LastName,
-                            email = user.Email,
-                            owner = user.Owner,
-                            account = new
-                            {
-                                id = user.AccountId,
-                                name = account?.Name
-                            }
+                            id = user.AccountId,
+                            name = account?.Name
                         }
-                    };
-                }
+                    }
+                };
             }
-            return (object)new { user = (object?)null };
-        });
+            else
+            {
+                authData = new { user = (object?)null };
+            }
+        }
+        else
+        {
+            authData = new { user = (object?)null };
+        }
+
+        Inertia.Share("auth", () => authData);
 
         await _next(context);
     }

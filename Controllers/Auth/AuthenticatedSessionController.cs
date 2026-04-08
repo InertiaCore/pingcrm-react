@@ -35,7 +35,6 @@ namespace PingCRM.Controllers.Auth
 
         [HttpPost]
         [Route("login")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Store([FromBody] LoginRequest request)
         {
             if (!ModelState.IsValid)

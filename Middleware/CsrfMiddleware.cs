@@ -29,18 +29,19 @@ public class CsrfMiddleware
             }
             catch (AntiforgeryValidationException ex)
             {
+                var isInertiaRequest = context.Request.Headers["X-Inertia"].ToString() == "true";
                 var referrer = context.Request.Headers["Referer"].ToString() ?? "/";
-                var locationKey = context.Request.Headers["X-Inertia"].ToString() == "true" ? "X-Inertia-Location" : "Location";
+                var locationKey = isInertiaRequest ? "X-Inertia-Location" : "Location";
 
                 logger.LogWarning("CSRF Middleware: Token validation failed - {Message}", ex.Message);
 
                 // Put flash message into TempData
                 var factory = context.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
                 var tempData = factory.GetTempData(context);
-                tempData["flash.error"] = "The page expired, please try again.";
+                tempData["error"] = "The page expired, please try again.";
                 tempData.Save();
 
-                context.Response.StatusCode = 409;
+                context.Response.StatusCode = isInertiaRequest ? 409 : 303;
                 context.Response.Headers[locationKey] = referrer;
                 return;
             }
@@ -53,8 +54,8 @@ public class CsrfMiddleware
         var cookieOptions = new CookieOptions
         {
             HttpOnly = false,
-            Secure = false,            // true in production
-            SameSite = SameSiteMode.Strict, // use None if cross-site (and keep Secure=true)
+            Secure = context.Request.IsHttps,
+            SameSite = SameSiteMode.Strict,
             Path = "/"
         };
 
