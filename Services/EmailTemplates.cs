@@ -33,6 +33,21 @@ public static class EmailTemplates
             """);
     }
 
+    public static string EmailChange(string confirmUrl)
+    {
+        var encodedUrl = WebUtility.HtmlEncode(confirmUrl);
+        return Wrap("Confirm Your New Email Address", $"""
+            <p>You requested to change your email address. Click the button below to confirm this change.</p>
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="{encodedUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                    Confirm Email Change
+                </a>
+            </p>
+            <p>This link will expire in 24 hours.</p>
+            <p>If you did not request this change, you can safely ignore this email.</p>
+            """);
+    }
+
     private static string Wrap(string title, string content)
     {
         return $"""
