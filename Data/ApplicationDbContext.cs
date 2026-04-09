@@ -90,8 +90,8 @@ namespace PingCRM.Data
         private void SeedData(ModelBuilder modelBuilder)
         {
             var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            // Static password hash for "secret" - pre-generated hash
-            const string staticPasswordHash = "AQAAAAIAAYagAAAAEE5RzHZ+3dQAI1H7sUo0TtR+HJb+yc336uLFL5PcW63/BbGqdE9cNBf1pbjgj5bKow==";
+            // Static password hash for "Secret1234" - pre-generated hash
+            const string staticPasswordHash = "AQAAAAIAAYagAAAAEFN0yt2nx5dqKiawa4Q0LuW70E9wRZ1sUk8mgdMxGLpDUzwlva43tq8iJ4RP5QCkXw==";
             // Static security stamp - fixed GUID for seeding
             const string staticSecurityStamp = "70e9a4fe-5125-413d-bb98-13a1bdd72fe3";
 

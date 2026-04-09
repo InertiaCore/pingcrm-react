@@ -1,11 +1,14 @@
+using System.Net;
+using System.Threading.RateLimiting;
 using InertiaCore.Extensions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using PingCRM.Data;
 using PingCRM.Extensions;
 using PingCRM.Middleware;
 using PingCRM.Models;
+using PingCRM.Services;
 using Microsoft.AspNetCore.HttpOverrides;
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,11 +21,11 @@ builder.Services.AddDatabaseServices(builder.Configuration);
 // Add Identity services
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
-    options.Password.RequireDigit = false;
-    options.Password.RequiredLength = 1;
+    options.Password.RequiredLength = 10;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -38,6 +41,30 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.IsEssential = true;
     options.SlidingExpiration = true;
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
+
+    // Return 409 + X-Inertia-Location for Inertia requests instead of a 302 redirect
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Headers["X-Inertia"].ToString() == "true")
+        {
+            context.Response.StatusCode = 409;
+            context.Response.Headers["X-Inertia-Location"] = context.RedirectUri;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        if (context.Request.Headers["X-Inertia"].ToString() == "true")
+        {
+            context.Response.StatusCode = 409;
+            context.Response.Headers["X-Inertia-Location"] = context.RedirectUri;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 // https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-9.0
@@ -94,6 +121,23 @@ builder.Services.AddViteHelper();
 // Configure CSRF/Antiforgery protection
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 
+// Rate limiting for auth endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
+
+// Email service
+builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -108,6 +152,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();

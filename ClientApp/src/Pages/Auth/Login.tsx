@@ -9,7 +9,7 @@ import React from 'react';
 export default function LoginPage() {
     const { data, setData, errors, post, processing } = useForm({
         email: 'johndoe@example.com',
-        password: 'secret',
+        password: 'Secret1234',
         remember: true,
     });
 
@@ -104,6 +104,16 @@ export default function LoginPage() {
                     </div>
                 </form>
             </div>
+
+            <p className="mt-6 text-center text-sm text-white/70">
+                Don't have an account?{' '}
+                <Link
+                    href="/register"
+                    className="font-medium text-white underline hover:text-white/90"
+                >
+                    Register
+                </Link>
+            </p>
         </GuestLayout>
     );
 }
