@@ -36,6 +36,13 @@ export default () => {
                             My Profile
                         </Link>
                         <Link
+                            href="/settings/security"
+                            className="block px-6 py-2 hover:bg-indigo-600 hover:text-white"
+                            onClick={() => setMenuOpened(false)}
+                        >
+                            Security
+                        </Link>
+                        <Link
                             href="/users"
                             className="block px-6 py-2 hover:bg-indigo-600 hover:text-white"
                             onClick={() => setMenuOpened(false)}
