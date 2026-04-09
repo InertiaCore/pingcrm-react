@@ -58,8 +58,15 @@ namespace PingCRM.Controllers.Auth
                 user,
                 request.Password,
                 request.Remember,
-                lockoutOnFailure: false
+                lockoutOnFailure: true
             );
+
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User account locked out: {Email}", request.Email);
+                ModelState.AddModelError("email", "Account locked out. Please try again later.");
+                return Inertia.Back();
+            }
 
             if (!result.Succeeded)
             {
