@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="InertiaCorePreview" Version="2.0.0-preview.9" />
+    <PackageReference Include="MailKit" Version="4.15.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9" />
 
@@ -33,21 +34,17 @@
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
-  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build"
-    Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') And '$(CI)' != 'true' And '$(DOCKER_BUILD)' != 'true' ">
+  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') And '$(CI)' != 'true' And '$(DOCKER_BUILD)' != 'true' ">
     <!-- Ensure Node.js is installed -->
     <Exec Command="node --version" ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
     </Exec>
-    <Error Condition="'$(ErrorCode)' != '0'"
-      Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
-    <Message Importance="high"
-      Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
   </Target>
 
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish"
-    Condition=" '$(CI)' != 'true' And '$(DOCKER_BUILD)' != 'true' ">
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish" Condition=" '$(CI)' != 'true' And '$(DOCKER_BUILD)' != 'true' ">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
@@ -55,8 +52,7 @@
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>
       <DistFiles Include="$(SpaRoot)build\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')"
-        Exclude="@(ResolvedFileToPublish)">
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -65,16 +61,14 @@
   </Target>
 
   <!-- Include pre-built frontend assets when in CI/Docker mode -->
-  <Target Name="IncludePreBuiltAssets" AfterTargets="ComputeFilesToPublish"
-    Condition=" '$(CI)' == 'true' Or '$(DOCKER_BUILD)' == 'true' ">
+  <Target Name="IncludePreBuiltAssets" AfterTargets="ComputeFilesToPublish" Condition=" '$(CI)' == 'true' Or '$(DOCKER_BUILD)' == 'true' ">
     <ItemGroup>
       <!-- Include built assets from dist directory -->
       <DistFiles Include="$(SpaRoot)dist\**" Condition="Exists('$(SpaRoot)dist')" />
       <!-- Include built assets from build directory -->
       <DistFiles Include="$(SpaRoot)build\**" Condition="Exists('$(SpaRoot)build')" />
 
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')"
-        Exclude="@(ResolvedFileToPublish)">
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
