@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using InertiaCore;
 using PingCRM.Models;
 
 namespace PingCRM.Controllers.Auth
 {
+    [EnableRateLimiting("auth")]
     public class AuthenticatedSessionController : Controller
     {
         private readonly SignInManager<User> _signInManager;

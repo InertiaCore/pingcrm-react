@@ -1,19 +1,24 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using InertiaCore;
 using PingCRM.Models;
+using PingCRM.Services;
 
 namespace PingCRM.Controllers.Auth
 {
+    [EnableRateLimiting("auth")]
     public class PasswordResetController : Controller
     {
         private readonly UserManager<User> _userManager;
+        private readonly IEmailService _emailService;
         private readonly ILogger<PasswordResetController> _logger;
 
-        public PasswordResetController(UserManager<User> userManager, ILogger<PasswordResetController> logger)
+        public PasswordResetController(UserManager<User> userManager, IEmailService emailService, ILogger<PasswordResetController> logger)
         {
             _userManager = userManager;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -43,7 +48,11 @@ namespace PingCRM.Controllers.Auth
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var resetUrl = Url.Action("Edit", "PasswordReset", new { token, email = request.Email }, Request.Scheme);
-                _logger.LogInformation("Password reset link for {Email}: {Url}", request.Email, resetUrl);
+
+                await _emailService.SendEmailAsync(
+                    request.Email,
+                    "Reset Your Password - PingCRM",
+                    EmailTemplates.PasswordReset(resetUrl!));
             }
 
             // Always show success to prevent email enumeration
