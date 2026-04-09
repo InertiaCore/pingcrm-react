@@ -9,6 +9,7 @@ export interface User {
     owner: string;
     photo: string;
     deleted_at: string;
+    email_verified: boolean;
     account: Account;
 }
 

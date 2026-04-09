@@ -14,6 +14,7 @@ using PingCRM.ViewModels;
 using PingCRM.ViewModels.Shared;
 using PingCRM.Helpers;
 using PingCRM.Extensions;
+using PingCRM.Services;
 
 namespace PingCRM.Controllers
 {
@@ -23,15 +24,18 @@ namespace PingCRM.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly IEmailService _emailService;
 
         public UsersController(
             ApplicationDbContext context,
             UserManager<User> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -135,7 +139,7 @@ namespace PingCRM.Controllers
                 Email = model.Email,
                 UserName = model.Email,
                 Owner = model.Owner,
-                EmailConfirmed = true,
+                EmailConfirmed = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -155,6 +159,16 @@ namespace PingCRM.Controllers
                 }
                 return Inertia.Back();
             }
+
+            // Send verification email
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var verifyUrl = Url.Action("Verify", "EmailVerification",
+                new { userId = user.Id, token }, Request.Scheme);
+
+            await _emailService.SendEmailAsync(
+                user.Email!,
+                "Verify Your Email Address - PingCRM",
+                EmailTemplates.EmailVerification(verifyUrl!));
 
             TempData["success"] = "User created.";
             return RedirectToAction(nameof(Index));
