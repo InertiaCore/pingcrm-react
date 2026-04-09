@@ -102,6 +102,13 @@ namespace PingCRM.Controllers.Auth
                 return Inertia.Back();
             }
 
+            // Completing a password reset proves email ownership
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+
             TempData["success"] = "Your password has been reset. You can now sign in.";
             return RedirectToAction("Create", "AuthenticatedSession");
         }
