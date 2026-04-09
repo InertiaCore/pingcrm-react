@@ -1,13 +1,16 @@
+using System.Net;
+
 namespace PingCRM.Services;
 
 public static class EmailTemplates
 {
     public static string PasswordReset(string resetUrl)
     {
+        var encodedUrl = WebUtility.HtmlEncode(resetUrl);
         return Wrap("Reset Your Password", $"""
             <p>You are receiving this email because we received a password reset request for your account.</p>
             <p style="text-align: center; margin: 30px 0;">
-                <a href="{resetUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                <a href="{encodedUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
                     Reset Password
                 </a>
             </p>
@@ -18,10 +21,11 @@ public static class EmailTemplates
 
     public static string EmailVerification(string verifyUrl)
     {
+        var encodedUrl = WebUtility.HtmlEncode(verifyUrl);
         return Wrap("Verify Your Email Address", $"""
             <p>Please click the button below to verify your email address.</p>
             <p style="text-align: center; margin: 30px 0;">
-                <a href="{verifyUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                <a href="{encodedUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
                     Verify Email Address
                 </a>
             </p>
