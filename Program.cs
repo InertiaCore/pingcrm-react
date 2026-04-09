@@ -168,7 +168,13 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 
+// Minimal health endpoint (also useful for CSRF token initialization in tests)
+app.MapGet("/health", () => Results.Ok("ok"));
+
 // Initialize database
 await app.InitializeDatabaseAsync();
 
 app.Run();
+
+// Make the implicit Program class accessible to WebApplicationFactory
+public partial class Program { }
