@@ -22,6 +22,13 @@ namespace PingCRM.Controllers.Auth
         }
 
         [HttpGet]
+        [Route("verify-email")]
+        public IActionResult Notice()
+        {
+            return Inertia.Render("Auth/VerifyEmail");
+        }
+
+        [HttpGet]
         [Route("verify-email/{userId}/{token}")]
         [AllowAnonymous]
         public async Task<IActionResult> Verify(int userId, string token)

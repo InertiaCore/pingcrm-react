@@ -47,29 +47,30 @@ public class HandleInertiaRequests
 
         // Resolve user data async before the lambda to avoid sync-over-async (.Result)
         object authData;
+        User? currentUser = null;
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
             var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-            var user = await userManager.GetUserAsync(context.User);
-            if (user != null)
+            currentUser = await userManager.GetUserAsync(context.User);
+            if (currentUser != null)
             {
-                var account = await dbContext.Accounts.FindAsync(user.AccountId);
+                var account = await dbContext.Accounts.FindAsync(currentUser.AccountId);
                 authData = new
                 {
                     user = new
                     {
-                        id = user.Id,
-                        first_name = user.FirstName,
-                        last_name = user.LastName,
-                        email = user.Email,
-                        owner = user.Owner,
-                        photo = user.PhotoPath,
-                        deleted_at = user.DeletedAt,
-                        email_verified = user.EmailConfirmed,
+                        id = currentUser.Id,
+                        first_name = currentUser.FirstName,
+                        last_name = currentUser.LastName,
+                        email = currentUser.Email,
+                        owner = currentUser.Owner,
+                        photo = currentUser.PhotoPath,
+                        deleted_at = currentUser.DeletedAt,
+                        email_verified = currentUser.EmailConfirmed,
                         account = new
                         {
-                            id = user.AccountId,
+                            id = currentUser.AccountId,
                             name = account?.Name
                         }
                     }
@@ -86,6 +87,21 @@ public class HandleInertiaRequests
         }
 
         Inertia.Share("auth", () => authData);
+
+        // Redirect unverified users to the verification notice page
+        if (currentUser != null && !currentUser.EmailConfirmed)
+        {
+            var path = context.Request.Path.Value ?? "";
+            var isAllowed = path.StartsWith("/verify-email") ||
+                            path.StartsWith("/email/verification-notification") ||
+                            path == "/logout";
+
+            if (!isAllowed)
+            {
+                context.Response.Redirect("/verify-email");
+                return;
+            }
+        }
 
         await _next(context);
     }
