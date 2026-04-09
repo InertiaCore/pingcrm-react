@@ -23,17 +23,20 @@ namespace PingCRM.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _environment;
         private readonly IEmailService _emailService;
 
         public UsersController(
             ApplicationDbContext context,
             UserManager<User> userManager,
+            SignInManager<User> signInManager,
             IWebHostEnvironment environment,
             IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _signInManager = signInManager;
             _environment = environment;
             _emailService = emailService;
         }
@@ -129,6 +132,12 @@ namespace PingCRM.Controllers
             if (currentUser?.AccountId == null)
             {
                 return Unauthorized();
+            }
+
+            if (!currentUser.Owner)
+            {
+                TempData["error"] = "Only account owners can create users.";
+                return Inertia.Back();
             }
 
             var user = new User
@@ -232,8 +241,19 @@ namespace PingCRM.Controllers
             user.LastName = model.LastName;
             user.Email = model.Email;
             user.UserName = model.Email;
-            user.Owner = model.Owner;
             user.UpdatedAt = DateTime.UtcNow;
+
+            // Only owners can change the Owner flag
+            var ownerChanged = model.Owner != user.Owner;
+            if (ownerChanged)
+            {
+                if (!currentUser.Owner)
+                {
+                    TempData["error"] = "Only account owners can change user roles.";
+                    return Inertia.Back();
+                }
+                user.Owner = model.Owner;
+            }
 
             if (model.Photo != null)
             {
@@ -247,6 +267,12 @@ namespace PingCRM.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Refresh the session if the current user's own role changed
+            if (ownerChanged && user.Id == currentUser.Id)
+            {
+                await _signInManager.RefreshSignInAsync(user);
+            }
 
             TempData["success"] = "User updated.";
             return Inertia.Back();
@@ -264,6 +290,12 @@ namespace PingCRM.Controllers
             if (user == null || user.AccountId != currentUser.AccountId)
             {
                 return NotFound();
+            }
+
+            if (user.Id == currentUser.Id)
+            {
+                TempData["error"] = "You cannot delete yourself.";
+                return Inertia.Back();
             }
 
             if (_environment.EnvironmentName == "Demo" && user.IsDemoUser())
@@ -300,9 +332,29 @@ namespace PingCRM.Controllers
             return Inertia.Back();
         }
 
+        private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+        private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
+        private const long MaxPhotoSize = 5 * 1024 * 1024; // 5 MB
+
         private async Task<string> SavePhotoAsync(IFormFile photo)
         {
-            var fileName = $"{Guid.NewGuid()}{System.IO.Path.GetExtension(photo.FileName)}";
+            if (photo.Length > MaxPhotoSize)
+            {
+                throw new InvalidOperationException("Photo must be less than 5 MB.");
+            }
+
+            var extension = System.IO.Path.GetExtension(photo.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(extension))
+            {
+                throw new InvalidOperationException("Photo must be a JPG, PNG, or WebP image.");
+            }
+
+            if (!AllowedContentTypes.Contains(photo.ContentType))
+            {
+                throw new InvalidOperationException("Photo must be a JPG, PNG, or WebP image.");
+            }
+
+            var fileName = $"{Guid.NewGuid()}{extension}";
             var filePath = System.IO.Path.Combine(_environment.WebRootPath, "uploads", "users", fileName);
 
             var directoryPath = System.IO.Path.GetDirectoryName(filePath);
