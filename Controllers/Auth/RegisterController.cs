@@ -16,17 +16,20 @@ namespace PingCRM.Controllers.Auth
         private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IAuditService _auditService;
 
         public RegisterController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             ApplicationDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _emailService = emailService;
+            _auditService = auditService;
         }
 
         [HttpGet]
@@ -105,6 +108,7 @@ namespace PingCRM.Controllers.Auth
                 EmailTemplates.EmailVerification(verifyUrl!));
 
             await _signInManager.SignInAsync(user, isPersistent: false);
+            await _auditService.LogAsync(HttpContext, user.Id, "AccountCreated");
 
             return RedirectToAction("Index", "Dashboard");
         }

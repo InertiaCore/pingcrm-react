@@ -10,6 +10,7 @@ export interface User {
     photo: string;
     deleted_at: string;
     email_verified: boolean;
+    two_factor_enabled: boolean;
     account: Account;
 }
 

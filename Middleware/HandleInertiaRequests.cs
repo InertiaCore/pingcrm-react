@@ -68,6 +68,7 @@ public class HandleInertiaRequests
                         photo = currentUser.PhotoPath,
                         deleted_at = currentUser.DeletedAt,
                         email_verified = currentUser.EmailConfirmed,
+                        two_factor_enabled = currentUser.TwoFactorEnabled,
                         account = new
                         {
                             id = currentUser.AccountId,
