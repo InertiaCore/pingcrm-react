@@ -13,10 +13,12 @@
     },
     "dependencies": {
         "@inertiajs/react": "^2.0.3",
+        "@simplewebauthn/browser": "^13.3.0",
         "axios": "^1.10.0",
         "classnames": "^2.5.1",
         "lodash": "^4.17.21",
         "lucide-react": "^0.544.0",
+        "qrcode.react": "^4.2.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-use": "^17.6.0",

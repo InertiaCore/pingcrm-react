@@ -3,8 +3,9 @@ import { CheckboxInput } from '@/Components/Form/CheckboxInput';
 import FieldGroup from '@/Components/Form/FieldGroup';
 import TextInput from '@/Components/Form/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import React from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { startAuthentication } from '@simplewebauthn/browser';
+import React, { useState } from 'react';
 
 export default function LoginPage() {
     const { data, setData, errors, post, processing } = useForm({
@@ -103,6 +104,10 @@ export default function LoginPage() {
                         </LoadingButton>
                     </div>
                 </form>
+
+                <div className="border-t border-gray-200 px-6 py-4">
+                    <PasskeySignIn />
+                </div>
             </div>
 
             <p className="mt-6 text-center text-sm text-white/70">
@@ -115,5 +120,71 @@ export default function LoginPage() {
                 </Link>
             </p>
         </GuestLayout>
+    );
+}
+
+function PasskeySignIn() {
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    async function signInWithPasskey() {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const csrfToken = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (csrfToken) {
+                headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
+            }
+
+            const optionsRes = await fetch('/login/passkey/options', {
+                method: 'POST',
+                headers,
+            });
+            const optionsJson = await optionsRes.json();
+
+            const credential = await startAuthentication({
+                optionsJSON: optionsJson,
+            });
+
+            const signInRes = await fetch('/login/passkey', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    credentialJson: JSON.stringify(credential),
+                }),
+            });
+
+            if (signInRes.ok) {
+                const data = await signInRes.json();
+                router.visit(data.redirect || '/');
+            } else {
+                const err = await signInRes.json();
+                setError(err.error || 'Passkey authentication failed.');
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error && err.name !== 'NotAllowedError') {
+                setError(err.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return (
+        <div className="text-center">
+            {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+            <button
+                type="button"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={signInWithPasskey}
+                disabled={loading}
+            >
+                {loading ? 'Verifying...' : 'Sign in with a Passkey'}
+            </button>
+        </div>
     );
 }
