@@ -141,6 +141,9 @@ builder.Services.AddRateLimiter(options =>
 // Email service
 builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
 
+// Audit service
+builder.Services.AddScoped<IAuditService, AuditService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -160,6 +163,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseInertia();
+app.UseMiddleware<SessionTrackingMiddleware>();
 app.UseMiddleware<CsrfMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseMiddleware<HandleInertiaRequests>();

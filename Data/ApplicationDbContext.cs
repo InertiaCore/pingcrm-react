@@ -15,6 +15,8 @@ namespace PingCRM.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Contact> Contacts { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,6 +84,26 @@ namespace PingCRM.Data
                     .WithMany(o => o.Contacts)
                     .HasForeignKey(e => e.OrganizationId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.ToTable("audit_logs");
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Action);
+                entity.HasIndex(e => e.CreatedAt);
+            });
+
+            modelBuilder.Entity<UserSession>(entity =>
+            {
+                entity.ToTable("user_sessions");
+                entity.HasIndex(e => e.SessionToken).IsUnique();
+                entity.HasIndex(e => e.UserId);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             SeedData(modelBuilder);
